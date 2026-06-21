@@ -21,8 +21,8 @@ All sample data in this repository is fictional and for educational purposes onl
 
 | Episode | Topic | Files |
 |---|---|---|
-| EP-01 | PBIRS Installation — Step by Step | [Installation Guide](./PBIRS-Setup-Guides/EP01-Installation-Steps.pdf) |
-| EP-02 | Time Intelligence, Data Modeling & Star Schema | [DAX Examples](./DAX-Formulas/EP02-Star-Schema-Examples.dax) |
+| EP-01 | PBIRS Installation — Step by Step | [Installation Guide](./PBIRS-Setup-Guides/Power%20BI%20RS%20Desktop%20Tutorial/EP-01) |
+| EP-02 | Time Intelligence, Data Modeling & Star Schema | [DAX Examples](./DAX-Formulas/Power%20BI%20RS%20Desktop%20Tutorial/EP-02) |
 
 *(More episodes added as new videos are published)*
 
@@ -34,9 +34,14 @@ All sample data in this repository is fictional and for educational purposes onl
 PowerBIRS-Talk-Resources/
 ├── README.md
 ├── DAX-Formulas/
+│   └── Power BI RS Desktop Tutorial/
+│       └── EP-02
 ├── Sample-Datasets/
+│   └── Power BI RS Desktop Tutorial/
 ├── PBIRS-Setup-Guides/
+│   └── Power BI RS Desktop Tutorial/
 └── Scripts-and-Templates/
+    └── Power BI RS Desktop Tutorial/
 ```
 
 ---
