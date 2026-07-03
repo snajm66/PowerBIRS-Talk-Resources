@@ -1,0 +1,22 @@
+{
+  "name": "PowerBIRS Talk - Ep4 Brand Theme",
+  "dataColors": [
+    "#2E5E4E",
+    "#4C9F70",
+    "#8FBF9F",
+    "#F2A65A",
+    "#E7683A",
+    "#C4423D",
+    "#5B7A99",
+    "#2C3E50"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#252423",
+  "tableAccent": "#2E5E4E",
+  "good": "#4C9F70",
+  "neutral": "#F2A65A",
+  "bad": "#C4423D",
+  "maximum": "#2E5E4E",
+  "center": "#8FBF9F",
+  "minimum": "#FFFFFF"
+}

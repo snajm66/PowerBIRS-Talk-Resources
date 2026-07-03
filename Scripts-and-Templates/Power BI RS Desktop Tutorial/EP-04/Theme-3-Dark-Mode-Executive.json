@@ -1,0 +1,22 @@
+{
+  "name": "Dark Mode Executive — PowerBIRS Talk",
+  "dataColors": [
+    "#4FC3F7",
+    "#FFD54F",
+    "#81C784",
+    "#F06292",
+    "#BA68C8",
+    "#FF8A65",
+    "#4DB6AC",
+    "#A1887F"
+  ],
+  "good": "#66BB6A",
+  "bad": "#EF5350",
+  "neutral": "#FFCA28",
+  "maximum": "#4FC3F7",
+  "center": "#FFD54F",
+  "minimum": "#37474F",
+  "foreground": "#ECEFF1",
+  "background": "#1A2332",
+  "tableAccent": "#4FC3F7"
+}

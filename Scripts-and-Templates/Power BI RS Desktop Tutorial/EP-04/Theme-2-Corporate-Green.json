@@ -1,0 +1,22 @@
+{
+  "name": "Corporate Green — PowerBIRS Talk",
+  "dataColors": [
+    "#1E5631",
+    "#A4C639",
+    "#2E86AB",
+    "#D4A017",
+    "#8B4513",
+    "#5D6D7E",
+    "#48A9A6",
+    "#C0587E"
+  ],
+  "good": "#1E5631",
+  "bad": "#B71C1C",
+  "neutral": "#E6A817",
+  "maximum": "#1E5631",
+  "center": "#A4C639",
+  "minimum": "#EFF5EF",
+  "foreground": "#1C2833",
+  "background": "#FDFDFB",
+  "tableAccent": "#1E5631"
+}

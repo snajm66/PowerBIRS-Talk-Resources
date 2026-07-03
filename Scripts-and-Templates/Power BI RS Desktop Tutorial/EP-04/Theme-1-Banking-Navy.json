@@ -1,0 +1,22 @@
+{
+  "name": "Banking Navy — PowerBIRS Talk",
+  "dataColors": [
+    "#1B3A5C",
+    "#B8860B",
+    "#2E86AB",
+    "#5C8A64",
+    "#A63D40",
+    "#6B5B95",
+    "#3D8B8B",
+    "#C97B4A"
+  ],
+  "good": "#2E7D32",
+  "bad": "#C62828",
+  "neutral": "#F9A825",
+  "maximum": "#1B3A5C",
+  "center": "#B8860B",
+  "minimum": "#E8EDF2",
+  "foreground": "#1B2838",
+  "background": "#FFFFFF",
+  "tableAccent": "#1B3A5C"
+}

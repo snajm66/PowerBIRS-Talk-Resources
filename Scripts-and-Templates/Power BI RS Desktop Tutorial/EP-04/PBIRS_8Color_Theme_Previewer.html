@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PBIRS 8-Color Theme Previewer — PowerBIRS Talk Ep.4</title>
+<style>
+  :root{
+    --c1:#2E5E4E; --c2:#4C9F70; --c3:#8FBF9F; --c4:#F2A65A;
+    --c5:#E7683A; --c6:#C4423D; --c7:#5B7A99; --c8:#2C3E50;
+    --bg:#F7F8FA; --fg:#1F2937;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:'Segoe UI',Arial,sans-serif;margin:0;background:var(--bg);color:var(--fg);}
+  header{background:var(--c1);color:#fff;padding:18px 28px;}
+  header h1{margin:0;font-size:20px;}
+  header p{margin:4px 0 0;font-size:13px;opacity:.85;}
+  .wrap{display:grid;grid-template-columns:300px 1fr;gap:20px;padding:20px;}
+  .panel{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+  .swatch-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .swatch-row label{font-size:12px;width:150px;line-height:1.3;}
+  .swatch-row input[type=color]{width:38px;height:30px;border:none;border-radius:6px;cursor:pointer;background:none;}
+  .swatch-row input[type=text]{width:80px;font-size:12px;padding:4px;border:1px solid #ddd;border-radius:4px;}
+  .role{font-size:10px;color:#777;display:block;}
+  h2{font-size:14px;margin:0 0 10px;color:var(--fg);border-left:4px solid var(--c1);padding-left:8px;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;}
+  .kpi{border-radius:10px;padding:14px;color:#fff;}
+  .kpi .label{font-size:12px;opacity:.85;}
+  .kpi .value{font-size:26px;font-weight:700;margin-top:4px;}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .card{background:#fff;border:1px solid #eee;border-radius:10px;padding:14px;}
+  .card h3{font-size:13px;margin:0 0 10px;color:#444;}
+  .bars{display:flex;align-items:flex-end;gap:8px;height:140px;}
+  .bar{flex:1;border-radius:4px 4px 0 0;position:relative;}
+  .bar span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:10px;color:#666;}
+  svg text{font-size:9px;fill:#666;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{color:#fff;padding:6px 8px;text-align:left;}
+  td{padding:6px 8px;border-bottom:1px solid #eee;}
+  tr:nth-child(even) td{background:#fafafa;}
+  .accent-cell{width:8px;padding:0;}
+  .slicer{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{padding:6px 12px;border-radius:16px;color:#fff;font-size:11px;}
+  .legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;}
+  .btnrow{display:flex;gap:8px;margin-top:14px;}
+  button{background:var(--c1);color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:12px;}
+  textarea{width:100%;height:160px;font-family:Consolas,monospace;font-size:11px;margin-top:10px;border:1px solid #ddd;border-radius:6px;padding:8px;}
+  .note{font-size:11px;color:#666;line-height:1.5;margin-top:14px;background:#f4f6f8;padding:10px;border-radius:8px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>PBIRS 8-Color Theme Previewer</h1>
+  <p>PowerBIRS Talk — Episode 4: Report Server Theme &amp; Branding | Paste hex codes from bibb.pro, see them live across visuals, export theme.json</p>
+</header>
+
+<div class="wrap">
+  <div class="panel" id="controls">
+    <h2>Paste 8 Colors from bibb.pro</h2>
+    <div id="swatches"></div>
+    <div class="btnrow">
+      <button onclick="buildJSON()">Generate theme.json</button>
+      <button onclick="copyJSON()">Copy</button>
+    </div>
+    <textarea id="jsonOut" readonly></textarea>
+    <div class="note">
+      dataColors[0-7] in a Power BI theme is the fixed 8-color palette Power BI cycles through for every categorical visual. Slot 1-3 get used first — always carry your strongest brand colors there. Slots 4-8 fill out charts with more categories and should still pass WCAG contrast against white/dark backgrounds (bibb.pro flags this for you before you copy the hex codes).
+    </div>
+  </div>
+
+  <div>
+    <div class="grid" id="kpis"></div>
+
+    <div class="charts">
+      <div class="card">
+        <h3>Column Chart — Branch Sales (dataColors 1-6 in order)</h3>
+        <div class="bars" id="bars"></div>
+      </div>
+      <div class="card">
+        <h3>Donut — Product Mix (all 8 slots)</h3>
+        <svg viewBox="0 0 120 120" width="140" height="140" id="donut" style="margin:0 auto;display:block;"></svg>
+      </div>
+    </div>
+
+    <div class="charts">
+      <div class="card">
+        <h3>Line Chart — 3 Series Trend (dataColors 1,2,3)</h3>
+        <svg viewBox="0 0 300 140" width="100%" height="140" id="line"></svg>
+      </div>
+      <div class="card">
+        <h3>Matrix Table — Region Accent Bars</h3>
+        <table id="matrix"></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Slicer Chips — Category Filter (full 8-color set)</h3>
+      <div class="slicer" id="slicer"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const roles = [
+  "1 — Primary brand color. First series, hero KPI, most important category.",
+  "2 — Secondary accent. Comparison series, second-ranked category.",
+  "3 — Tertiary. Third category, still high emphasis.",
+  "4 — Supporting. 4th+ category fill color.",
+  "5 — Supporting. 4th+ category fill color.",
+  "6 — Supporting. 4th+ category fill color.",
+  "7 — Supporting. 4th+ category fill color.",
+  "8 — Supporting. 4th+ category fill color / long-tail 'Other'."
+];
+const defaults = ["#2E5E4E","#4C9F70","#8FBF9F","#F2A65A","#E7683A","#C4423D","#5B7A99","#2C3E50"];
+let colors = [...defaults];
+
+function initControls(){
+  const box = document.getElementById('swatches');
+  box.innerHTML = '';
+  colors.forEach((c,i)=>{
+    const row = document.createElement('div');
+    row.className = 'swatch-row';
+    row.innerHTML = `
+      <input type="color" value="${c}" oninput="updateColor(${i}, this.value)">
+      <div>
+        <input type="text" value="${c}" onchange="updateColor(${i}, this.value)">
+        <span class="role">${roles[i]}</span>
+      </div>`;
+    box.appendChild(row);
+  });
+}
+
+function updateColor(i, val){
+  colors[i] = val;
+  document.documentElement.style.setProperty('--c'+(i+1), val);
+  render();
+}
+
+function render(){
+  // KPI cards
+  const kpiData = [
+    {label:'Total Sales', value:'PKR 24.6M', c:0},
+    {label:'Branches Active', value:'138', c:1},
+    {label:'YoY Growth', value:'+12.4%', c:2}
+  ];
+  document.getElementById('kpis').innerHTML = kpiData.map(k=>
+    `<div class="kpi" style="background:${colors[k.c]}"><div class="label">${k.label}</div><div class="value">${k.value}</div></div>`
+  ).join('');
+
+  // Bar chart
+  const barVals = [58,82,45,70,36,64];
+  document.getElementById('bars').innerHTML = barVals.map((v,i)=>
+    `<div class="bar" style="height:${v}%;background:${colors[i%8]}"><span>${v}</span></div>`
+  ).join('');
+
+  // Donut chart (8 slices)
+  const slices = [18,15,14,13,12,10,10,8];
+  let acc = 0;
+  const r=50,cx=60,cy=60;
+  let paths='';
+  slices.forEach((v,i)=>{
+    const a0 = (acc/100)*2*Math.PI - Math.PI/2;
+    acc += v;
+    const a1 = (acc/100)*2*Math.PI - Math.PI/2;
+    const x0 = cx+r*Math.cos(a0), y0 = cy+r*Math.sin(a0);
+    const x1 = cx+r*Math.cos(a1), y1 = cy+r*Math.sin(a1);
+    const large = v>50?1:0;
+    paths += `<path d="M${cx},${cy} L${x0},${y0} A${r},${r} 0 ${large} 1 ${x1},${y1} Z" fill="${colors[i]}"/>`;
+  });
+  document.getElementById('donut').innerHTML = paths + `<circle cx="${cx}" cy="${cy}" r="26" fill="#fff"/>`;
+
+  // Line chart, 3 series
+  const series = [
+    [30,45,40,60,55,70],
+    [50,40,60,45,65,50],
+    [20,35,30,50,40,58]
+  ];
+  let lines='';
+  series.forEach((s,si)=>{
+    const pts = s.map((v,i)=>`${i*55+10},${130-v}`).join(' ');
+    lines += `<polyline points="${pts}" fill="none" stroke="${colors[si]}" stroke-width="2.5"/>`;
+    s.forEach((v,i)=>{ lines += `<circle cx="${i*55+10}" cy="${130-v}" r="3" fill="${colors[si]}"/>`; });
+  });
+  document.getElementById('line').innerHTML = lines;
+
+  // Matrix table
+  const regions = ['Karachi Central','Lahore North','Islamabad','Faisalabad','Multan'];
+  let rows = `<tr><th colspan="2" style="background:${colors[0]}">Region</th><th style="background:${colors[0]}">Sales (PKR M)</th></tr>`;
+  regions.forEach((r,i)=>{
+    rows += `<tr><td class="accent-cell" style="background:${colors[i%8]}"></td><td>${r}</td><td>${(4.2+i*1.3).toFixed(1)}</td></tr>`;
+  });
+  document.getElementById('matrix').innerHTML = rows;
+
+  // Slicer chips
+  const cats = ['Deposits','Financing','Cards','Digital Banking','Trade','Remittance','Bancassurance','Branch Ops'];
+  document.getElementById('slicer').innerHTML = cats.map((c,i)=>
+    `<div class="chip" style="background:${colors[i]}"><span class="legend-dot" style="background:#fff;opacity:.6"></span>${c}</div>`
+  ).join('');
+}
+
+function buildJSON(){
+  const theme = {
+    "name": "PowerBIRS Talk - Ep4 Brand Theme",
+    "dataColors": colors,
+    "background": "#FFFFFF",
+    "foreground": "#252423",
+    "tableAccent": colors[0]
+  };
+  document.getElementById('jsonOut').value = JSON.stringify(theme, null, 2);
+}
+
+function copyJSON(){
+  const ta = document.getElementById('jsonOut');
+  if(!ta.value) buildJSON();
+  ta.select();
+  document.execCommand('copy');
+}
+
+initControls();
+render();
+buildJSON();
+</script>
+</body>
+</html>

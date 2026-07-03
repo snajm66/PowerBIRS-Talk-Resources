@@ -1,0 +1,22 @@
+{
+  "name": "PowerBIRS Talk Demo Theme",
+  "dataColors": [
+    "#0D1B2A",
+    "#C9A84C",
+    "#00B4D8",
+    "#4CAF50",
+    "#E76F51",
+    "#7B2CBF",
+    "#2A9D8F",
+    "#F4A261"
+  ],
+  "good": "#2E7D32",
+  "bad": "#C62828",
+  "neutral": "#F9A825",
+  "maximum": "#0D1B2A",
+  "center": "#C9A84C",
+  "minimum": "#E0E1DD",
+  "foreground": "#0D1B2A",
+  "background": "#FFFFFF",
+  "tableAccent": "#00B4D8"
+}
