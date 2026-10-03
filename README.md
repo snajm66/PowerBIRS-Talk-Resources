@@ -2,7 +2,7 @@
 
 Downloadable DAX formulas, sample datasets, and guides from the **PowerBIRS Talk** YouTube channel — Power BI Report Server (PBIRS) tutorials in Urdu for corporate and banking BI professionals.
 
-📺 Channel: [youtube.com/@PBIRSTalk](https://youtube.com/@PBIRSTalk) 🌐 Website: [zahanai.com](https://zahanai.com)
+📺 Channel: [youtube.com/@PBIRSTalk](https://youtube.com/@PBIRSTalk) 🌐 Website: [powerbihelper.com](https://www.powerbihelper.com/)
 
 ---
 
@@ -51,7 +51,7 @@ PowerBIRS-Talk-Resources/
 ## Connect
 
 - YouTube: [@PBIRSTalk](https://youtube.com/@PBIRSTalk)
-- Website: [zahanai.com](https://powerbihelper.com)
+- Website: [powerbihelper.com](https://www.powerbihelper.com/)
 - LinkedIn: *(add your link)*
 
 If these resources helped you, consider subscribing to the channel and sharing it with fellow BI professionals. 🙏
