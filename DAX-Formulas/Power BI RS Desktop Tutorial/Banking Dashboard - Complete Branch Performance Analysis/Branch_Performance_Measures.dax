@@ -1,0 +1,324 @@
+// =====================================================================
+// Complete Branch Performance Analysis — DAX Measures
+// PowerBIRS Talk with Syed  |  youtube.com/@PBIRSTalk
+// Model: 'Bank Branches' (fact), 'Dim Branch', 'Dim Date', '_Measure'
+// Create measures in this order. 'Snapshot Date' first.
+// Deposits are year-end BALANCES (semi-additive): never SUM across years.
+// =====================================================================
+
+
+// ---------------------------------------------------------------------
+// 0. Helpers
+// ---------------------------------------------------------------------
+
+// Helper: latest year-end snapshot date visible in the current filter context. All semi-additive measures anchor on this.
+// Urdu: Filter mein aakhri (latest) year-end date nikalta hai. Baqi measures isi par chalte hain.
+// Format: dd-mmm-yyyy   |   Hidden: Yes
+Snapshot Date =
+CALCULATE ( MAX ( 'Bank Branches'[Deposit Date] ) )
+
+
+// ---------------------------------------------------------------------
+// 1. Deposits
+// ---------------------------------------------------------------------
+
+// Year-end deposit balance. Semi-additive: sums across branches, takes the LATEST snapshot across time (never sums years).
+// Urdu: Branches ka total deposit, lekin saalon ko jama nahi karta. Hamesha aakhri saal ka balance.
+// Format: #,##0
+Total Deposits =
+VAR _Snapshot = [Snapshot Date]
+RETURN
+    CALCULATE (
+        SUM ( 'Bank Branches'[Deposits] ),
+        'Dim Date'[Date] = _Snapshot
+    )
+
+// Deposits held at Main Office branches only.
+// Urdu: Sirf main office ke deposits.
+// Format: #,##0
+Main Office Deposits =
+CALCULATE ( [Total Deposits], KEEPFILTERS ( 'Dim Branch'[Main Office] = 1 ) )
+
+// Deposits of the branch network excluding Main Office. Use this for true branch performance.
+// Urdu: Main office ko nikaal kar branch network ke deposits. Asal branch performance ke liye.
+// Format: #,##0
+Deposits excl. Main Office =
+CALCULATE ( [Total Deposits], KEEPFILTERS ( 'Dim Branch'[Main Office] = 0 ) )
+
+// Share of deposits sitting in the Main Office.
+// Urdu: Total deposits ka kitna hissa main office mein hai.
+// Format: 0.0%
+Main Office Share % =
+DIVIDE ( [Main Office Deposits], [Total Deposits] )
+
+// Share of deposits vs the total of all branches selected in the visual/slicers.
+// Urdu: Selected total mein har state/branch ka hissa (%).
+// Format: 0.00%
+Deposit Share % =
+DIVIDE (
+    [Total Deposits],
+    CALCULATE ( [Total Deposits], ALLSELECTED ( 'Dim Branch' ) )
+)
+
+
+// ---------------------------------------------------------------------
+// 2. Branch Network
+// ---------------------------------------------------------------------
+
+// Branches holding a positive deposit balance at the latest snapshot. Zero/negative balances are excluded.
+// Urdu: Woh branches jin ka deposit zero se zyada hai.
+// Format: #,##0
+Active Branches =
+VAR _Snapshot = [Snapshot Date]
+RETURN
+    CALCULATE (
+        DISTINCTCOUNT ( 'Bank Branches'[Branch Number] ),
+        'Dim Date'[Date] = _Snapshot,
+        'Bank Branches'[Deposits] > 0
+    )
+
+// Branches with zero or negative deposit balance at the latest snapshot (dormant / data quality).
+// Urdu: Zero ya negative balance wali branches (dormant ya data quality issue).
+// Format: #,##0
+Zero-Deposit Branches =
+VAR _Snapshot = [Snapshot Date]
+RETURN
+    CALCULATE (
+        DISTINCTCOUNT ( 'Bank Branches'[Branch Number] ),
+        'Dim Date'[Date] = _Snapshot,
+        'Bank Branches'[Deposits] <= 0
+    ) + 0
+
+// Branches whose Established Date falls inside the selected period.
+// Urdu: Selected period mein khulne wali nayi branches.
+// Format: #,##0
+New Branches =
+VAR _Start = MIN ( 'Dim Date'[Date] )
+VAR _End = MAX ( 'Dim Date'[Date] )
+RETURN
+    COUNTROWS (
+        FILTER (
+            'Dim Branch',
+            'Dim Branch'[Established Date] >= _Start
+                && 'Dim Branch'[Established Date] <= _End
+        )
+    ) + 0
+
+// Branches whose Acquired Date falls inside the selected period.
+// Urdu: Selected period mein acquire (khareedi) gayi branches.
+// Format: #,##0
+Acquired Branches =
+VAR _Start = MIN ( 'Dim Date'[Date] )
+VAR _End = MAX ( 'Dim Date'[Date] )
+RETURN
+    COUNTROWS (
+        FILTER (
+            'Dim Branch',
+            NOT ISBLANK ( 'Dim Branch'[Acquired Date] )
+                && 'Dim Branch'[Acquired Date] >= _Start
+                && 'Dim Branch'[Acquired Date] <= _End
+        )
+    ) + 0
+
+// Average age (years) of branches established on or before the snapshot date.
+// Urdu: Branches ki average umar (saalon mein).
+// Format: 0.0
+Avg Branch Age (Years) =
+VAR _Snapshot = [Snapshot Date]
+RETURN
+    IF (
+        NOT ISBLANK ( _Snapshot ),
+        AVERAGEX (
+            FILTER (
+                'Dim Branch',
+                NOT ISBLANK ( 'Dim Branch'[Established Date] )
+                    && 'Dim Branch'[Established Date] <= _Snapshot
+            ),
+            YEARFRAC ( 'Dim Branch'[Established Date], _Snapshot )
+        )
+    )
+
+
+// ---------------------------------------------------------------------
+// 3. Branch Productivity
+// ---------------------------------------------------------------------
+
+// Average deposit per active branch (includes Main Office - skewed upward).
+// Urdu: Har branch ka average deposit (main office ki wajah se zyada dikhta hai).
+// Format: #,##0
+Avg Deposit per Branch =
+DIVIDE ( [Total Deposits], [Active Branches] )
+
+// Average deposit per active branch, excluding Main Office.
+// Urdu: Main office ke baghair har branch ka average deposit.
+// Format: #,##0
+Avg Deposit per Branch excl. MO =
+DIVIDE (
+    [Deposits excl. Main Office],
+    CALCULATE ( [Active Branches], KEEPFILTERS ( 'Dim Branch'[Main Office] = 0 ) )
+)
+
+// Median deposit of active branches at the latest snapshot - the 'typical' branch.
+// Urdu: Aam (typical) branch ka deposit. Average se zyada sachi tasveer.
+// Format: #,##0
+Median Deposit per Branch =
+VAR _Snapshot = [Snapshot Date]
+RETURN
+    CALCULATE (
+        MEDIAN ( 'Bank Branches'[Deposits] ),
+        'Dim Date'[Date] = _Snapshot,
+        'Bank Branches'[Deposits] > 0
+    )
+
+// Share of deposits held by the top 10% of active branches (concentration risk).
+// Urdu: Top 10% branches ke paas total deposits ka kitna hissa hai (concentration risk).
+// Format: 0.0%
+Top 10% Branch Share =
+VAR _Snapshot = [Snapshot Date]
+VAR _TopN = ROUNDUP ( [Active Branches] * 0.1, 0 )
+VAR _Rows =
+    CALCULATETABLE (
+        'Bank Branches',
+        'Dim Date'[Date] = _Snapshot,
+        'Bank Branches'[Deposits] > 0
+    )
+VAR _TopRows = TOPN ( _TopN, _Rows, 'Bank Branches'[Deposits], DESC )
+RETURN
+    IF ( _TopN > 0, DIVIDE ( SUMX ( _TopRows, 'Bank Branches'[Deposits] ), [Total Deposits] ) )
+
+
+// ---------------------------------------------------------------------
+// 4. Time Comparison
+// ---------------------------------------------------------------------
+
+// Total Deposits for the same period last year.
+// Urdu: Pichle saal ke deposits.
+// Format: #,##0
+Deposits PY =
+CALCULATE ( [Total Deposits], SAMEPERIODLASTYEAR ( 'Dim Date'[Date] ) )
+
+// Change in deposits vs previous year.
+// Urdu: Pichle saal ke muqable mein kitna farq aaya (amount).
+// Format: #,##0;-#,##0;0
+Deposits YoY Change =
+VAR _CY = [Total Deposits]
+VAR _PY = [Deposits PY]
+RETURN
+    IF ( NOT ISBLANK ( _CY ) && NOT ISBLANK ( _PY ), _CY - _PY )
+
+// Percentage growth in deposits vs previous year.
+// Urdu: Pichle saal ke muqable mein growth (%).
+// Format: 0.0%;-0.0%;0.0%
+Deposits YoY % =
+DIVIDE ( [Deposits YoY Change], [Deposits PY] )
+
+// Like-for-like growth: only branches active (deposits > 0) in BOTH current and prior year-end snapshots.
+// Urdu: Sirf woh branches jo dono saal active thin, un ki growth (like-for-like).
+// Format: 0.0%;-0.0%;0.0%
+Same-Store Deposits YoY % =
+VAR _Snapshot = [Snapshot Date]
+VAR _PYSnapshot = EDATE ( _Snapshot, -12 )
+VAR _CYBranches =
+    CALCULATETABLE (
+        VALUES ( 'Bank Branches'[Branch Number] ),
+        REMOVEFILTERS ( 'Dim Date' ),
+        'Dim Date'[Date] = _Snapshot,
+        'Bank Branches'[Deposits] > 0
+    )
+VAR _PYBranches =
+    CALCULATETABLE (
+        VALUES ( 'Bank Branches'[Branch Number] ),
+        REMOVEFILTERS ( 'Dim Date' ),
+        'Dim Date'[Date] = _PYSnapshot,
+        'Bank Branches'[Deposits] > 0
+    )
+VAR _SameStore = INTERSECT ( _CYBranches, _PYBranches )
+VAR _CY =
+    CALCULATE (
+        SUM ( 'Bank Branches'[Deposits] ),
+        REMOVEFILTERS ( 'Dim Date' ),
+        'Dim Date'[Date] = _Snapshot,
+        _SameStore
+    )
+VAR _PY =
+    CALCULATE (
+        SUM ( 'Bank Branches'[Deposits] ),
+        REMOVEFILTERS ( 'Dim Date' ),
+        'Dim Date'[Date] = _PYSnapshot,
+        _SameStore
+    )
+RETURN
+    IF ( NOT ISBLANK ( _PY ), DIVIDE ( _CY - _PY, _PY ) )
+
+// Compound annual growth rate of deposits between the first and last snapshot in the selected period.
+// Urdu: Pehle aur aakhri saal ke darmiyan saalana average (compound) growth.
+// Format: 0.0%;-0.0%;0.0%
+Deposits CAGR =
+VAR _First = CALCULATE ( MIN ( 'Bank Branches'[Deposit Date] ) )
+VAR _Last = [Snapshot Date]
+VAR _Years = YEAR ( _Last ) - YEAR ( _First )
+VAR _Begin = CALCULATE ( SUM ( 'Bank Branches'[Deposits] ), 'Dim Date'[Date] = _First )
+VAR _End = CALCULATE ( SUM ( 'Bank Branches'[Deposits] ), 'Dim Date'[Date] = _Last )
+RETURN
+    IF ( _Years > 0 && _Begin > 0, POWER ( DIVIDE ( _End, _Begin ), 1 / _Years ) - 1 )
+
+
+// ---------------------------------------------------------------------
+// 5. Ranking
+// ---------------------------------------------------------------------
+
+// Rank of a branch by Total Deposits among branches in the visual. Ranks within State automatically when State is on an outer level.
+// Urdu: Deposits ke hisaab se branch ka rank.
+// Format: 0
+Branch Rank =
+IF (
+    ISINSCOPE ( 'Dim Branch'[Branch] ),
+    RANKX ( ALLSELECTED ( 'Dim Branch'[Branch] ), [Total Deposits], , DESC, DENSE )
+)
+
+// Rank of a State by Total Deposits.
+// Urdu: Deposits ke hisaab se state ka rank.
+// Format: 0
+State Rank =
+IF (
+    ISINSCOPE ( 'Dim Branch'[State] ),
+    RANKX ( ALLSELECTED ( 'Dim Branch'[State] ), [Total Deposits], , DESC, DENSE )
+)
+
+
+// ---------------------------------------------------------------------
+// 6. Report UX
+// ---------------------------------------------------------------------
+
+// Dynamic label for report titles, e.g. 'Year 2016' or 'Years 2010 - 2016'.
+// Urdu: Report title ke liye dynamic label, jaise 'Years 2010 - 2016'.
+// Format: (text)
+Selected Period Label =
+VAR _MinY = MIN ( 'Dim Date'[Year] )
+VAR _MaxY = MAX ( 'Dim Date'[Year] )
+RETURN
+    IF ( _MinY = _MaxY, "Year " & _MaxY, "Years " & _MinY & " - " & _MaxY )
+
+// YoY % with arrow for cards/tables, e.g. '▲ 8.8%'.
+// Urdu: Arrow ke saath YoY %, cards aur tables ke liye.
+// Format: (text)
+YoY Indicator =
+VAR _Pct = [Deposits YoY %]
+RETURN
+    IF (
+        NOT ISBLANK ( _Pct ),
+        IF ( _Pct >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( _Pct ), "0.0%" )
+    )
+
+// Hex color for conditional formatting (Format > Font color > fx > Field value).
+// Urdu: Conditional formatting ke liye rang: green (growth), red (kami).
+// Format: (text)
+YoY Color =
+VAR _Pct = [Deposits YoY %]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( _Pct ), "#808080",
+        _Pct >= 0, "#1E8E3E",
+        "#D93025"
+    )
