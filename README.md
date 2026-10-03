@@ -51,7 +51,7 @@ PowerBIRS-Talk-Resources/
 ## Connect
 
 - YouTube: [@PBIRSTalk](https://youtube.com/@PBIRSTalk)
-- Website: [zahanai.com](https://zahanai.com)
+- Website: [zahanai.com](https://powerbihelper.com)
 - LinkedIn: *(add your link)*
 
 If these resources helped you, consider subscribing to the channel and sharing it with fellow BI professionals. 🙏
