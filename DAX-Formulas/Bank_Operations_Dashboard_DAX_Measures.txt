@@ -1,0 +1,145 @@
+BANK OPERATIONS PERFORMANCE DASHBOARD DAX MEASURES – Power BI Talk with
+Syed Table: OperationsTransactions
+
+NOTE: Formulas below are based on prior dashboard work and script
+metrics. Some column names for trend/branch visuals were not available
+in retrieved context; assumptions are marked.
+
+============================================================ TITLE 1 –
+OPERATIONS OVERVIEW
+============================================================
+
+Total Transactions = COUNTROWS(OperationsTransactions)
+
+Completed Transactions = CALCULATE([Total Transactions],
+OperationsTransactions[Status] = “Completed”)
+
+Pending Transactions = CALCULATE([Total Transactions],
+OperationsTransactions[Status] = “Pending”)
+
+Rejected Transactions = CALCULATE([Total Transactions],
+OperationsTransactions[Status] = “Rejected”)
+
+Failed Transactions = CALCULATE([Total Transactions],
+OperationsTransactions[Status] = “Failed”)
+
+SLA Breaches = CALCULATE( [Total Transactions],
+OperationsTransactions[SLAStatus] IN {“SLA Breach”, “SLA Breach
+(Pending)”} )
+
+Transaction Volume Trend: Use [Total Transactions] by Month/Date.
+Transactions by Status: Use [Total Transactions] by Status.
+
+============================================================ TITLE 2 –
+TRANSACTION ANALYSIS
+============================================================
+
+Total Transaction Amount =
+SUM(OperationsTransactions[TransactionAmountPKR])
+
+Average Processing Hours =
+AVERAGE(OperationsTransactions[ProcessingHours])
+
+Transactions by Type: Use [Total Transactions] by TransactionType.
+Transaction Status by Type: Use [Total Transactions], TransactionType,
+and Status. Transaction Amount by Type: Use [Total Transaction Amount]
+by TransactionType. Average Processing Time by Type: Use [Average
+Processing Hours] by TransactionType.
+
+============================================================ TITLE 3 –
+SLA & SERVICE PERFORMANCE
+============================================================
+
+SLA Eligible Transactions = CALCULATE( [Total Transactions],
+OperationsTransactions[SLAStatus] IN {“Within SLA”, “SLA Breach”, “SLA
+Breach (Pending)”} )
+
+SLA Compliant Transactions = CALCULATE([Total Transactions],
+OperationsTransactions[SLAStatus] = “Within SLA”)
+
+SLA Compliance % = DIVIDE([SLA Compliant Transactions], [SLA Eligible
+Transactions], 0)
+
+SLA Compliance by Transaction Type: Use [SLA Compliance %] by
+TransactionType. SLA Breaches by Type: Use [SLA Breaches] by
+TransactionType.
+
+Average Pending Age (Hours) = CALCULATE(
+AVERAGE(OperationsTransactions[PendingAgeHours]),
+OperationsTransactions[Status] = “Pending” )
+
+Average Pending Age by Type: Use [Average Pending Age (Hours)] by
+TransactionType.
+
+SLA Breach Rate by Type % = DIVIDE([SLA Breaches], [SLA Eligible
+Transactions], 0)
+
+NOTE: PendingAgeHours is an assumed column name; replace it with your
+model’s actual column. Breach-rate denominator shown here uses SLA
+Eligible Transactions; verify if your original visual used another
+denominator.
+
+============================================================ TITLE 4 –
+TRANSACTION RISK & EXCEPTION ANALYSIS
+============================================================
+
+Total Exceptions = [Failed Transactions] + [Rejected Transactions]
+
+Exception Rate % = DIVIDE([Total Exceptions], [Total Transactions], 0)
+
+Failed & Rejected by Type: Use [Failed Transactions] and [Rejected
+Transactions] by TransactionType. Total Exceptions by Type: Use [Total
+Exceptions] by TransactionType. Exception Rate by Type: Use [Exception
+Rate %] by TransactionType. Exception Distribution: Use [Failed
+Transactions] and [Rejected Transactions] in a donut chart.
+
+============================================================ TITLE 5 –
+CHANNEL & BRANCH PERFORMANCE ANALYSIS
+============================================================
+
+Digital Transactions = CALCULATE( [Total Transactions],
+OperationsTransactions[Channel] IN {“ATM”, “Corporate Banking”,
+“Internet Banking”, “Mobile Banking”} )
+
+Digital Channel % = DIVIDE([Digital Transactions], [Total Transactions],
+0)
+
+Transactions by Channel: Use [Total Transactions] by Channel.
+Transactions by Branch: Use [Total Transactions] by Branch; apply Top 5
+visual filter. Transaction Amount by Channel: Use [Total Transaction
+Amount] by Channel. Transaction Amount by Branch: Use [Total Transaction
+Amount] by Branch; apply Top 5 visual filter.
+
+============================================================ TITLE 6 –
+TRANSACTION TRENDS & TIME ANALYSIS
+============================================================
+
+Monthly Transaction Volume: Use [Total Transactions] by Month from
+Calendar/Date table. Monthly Transaction Amount: Use [Total Transaction
+Amount] by Month from Calendar/Date table. Monthly Digital Channel
+Transactions: Use [Digital Transactions] by Month from Calendar/Date
+table. Monthly Transaction Amount by Channel: Use [Total Transaction
+Amount] by Month and Channel. Top 5 Branches by Transaction Amount: Use
+[Total Transaction Amount] by Branch and Top 5 visual filter.
+
+============================================================ TITLE 7 –
+FORMATTING / MODEL NOTES
+============================================================
+
+Format as Percentage: - SLA Compliance % - SLA Breach Rate by Type % -
+Exception Rate % - Digital Channel %
+
+Format [Total Transaction Amount] as PKR currency.
+
+Top 5 visual filters: - Transaction-volume visuals: Top 5 by [Total
+Transactions]. - Transaction-amount visuals: Top 5 by [Total Transaction
+Amount].
+
+Trend visuals need a Calendar/Date table related to the transaction
+date.
+
+Possible column names to verify: TransactionType, TransactionAmountPKR,
+ProcessingHours, PendingAgeHours, Channel, Branch, TransactionID,
+Status, SLAStatus, Transaction Date.
+
+END OF DOCUMENT
